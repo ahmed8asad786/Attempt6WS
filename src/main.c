@@ -1,10 +1,8 @@
-#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/display.h>
 #include <zephyr/sys/printk.h>
 #include <lvgl.h>
-
 #include <zephyr/drivers/gpio.h>  // Add this!
 
 int main(void)
