@@ -1,0 +1,43 @@
+/{
+	chosen {
+		zephyr,display=&disp1;
+	};
+
+        // lvgl_displays: my-displays {
+        //         compatible = "zephyr,displays";
+        //         displays = <&disp1>;
+        //         status = "okay";
+        // };
+
+	mipi_dbi1 {
+		compatible = "zephyr,mipi-dbi-spi";
+		dc-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+		spi-dev = <&spi0>;
+		write-only;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	    status = "okay";
+
+		disp1: ssd1680@0 {
+            compatible = "solomon,ssd1680";
+            mipi-max-frequency = <400000>;
+            reg = <0>;
+            rotation = <0>;
+            width = <250>;
+            height = <122>;
+            busy-gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+			status="okay";
+        };
+
+
+	};
+
+};
+
+&spi0 {
+			status = "okay";
+			/* display CS on GPIO1 and GPIO3 */
+			cs-gpios = <&gpio1 1 GPIO_ACTIVE_LOW>;
+
+};

@@ -1,0 +1,1 @@
+https://github.com/zephyrproject-rtos/zephyr/issues/86929 used this as template, attemping to get waveshare display to work. So far, builds but nothing really happens beyond that.
