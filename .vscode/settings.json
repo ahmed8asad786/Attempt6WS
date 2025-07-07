@@ -2,6 +2,7 @@
     "files.associations": {
         "gpio.h": "c",
         "device.h": "c",
-        "devicetree.h": "c"
+        "devicetree.h": "c",
+        "fonts5x7.h": "c"
     }
 }

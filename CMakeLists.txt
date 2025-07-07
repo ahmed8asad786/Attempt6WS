@@ -7,6 +7,9 @@ file(GLOB FONT_SOURCES fonts/*.c)
 
 target_sources(app PRIVATE
     src/main.c
+    src/fonts5x7.c
+    src/fonts_8x12_montserrat.c
+    src/my_image.c
     ${FONT_SOURCES}
 )
 
