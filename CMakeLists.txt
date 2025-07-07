@@ -3,4 +3,13 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(Attempt6WS)
 
-target_sources(app PRIVATE src/main.c)
+file(GLOB FONT_SOURCES fonts/*.c)
+
+target_sources(app PRIVATE
+    src/main.c
+    ${FONT_SOURCES}
+)
+
+target_include_directories(app PRIVATE
+  include
+)
