@@ -260,7 +260,7 @@ int main(void)
 
     // === Afterwards, uncomment these two methods ===
     // pack_buffer();
-    // display_write(display_dev, 0, 0, desc, buf);
+    // display_write(display_dev, 0, 0, &desc, buf);
 
     k_msleep(1000);
 
