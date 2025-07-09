@@ -8,7 +8,7 @@
 #include <math.h>
 #include "fonts5x7.h"
 #include "fonts_8x12_montserrat.h"
-#include "my_image.h"
+#include "images.h"
 
 #define DISPLAY_WIDTH      256
 #define DISPLAY_HEIGHT     120
@@ -24,6 +24,8 @@ LOG_MODULE_REGISTER(main);
 
 static uint8_t raw_buf[DISPLAY_WIDTH * DISPLAY_HEIGHT];  // 1 byte per pixel
 static uint8_t buf[DISPLAY_BUF_SIZE];
+
+#pragma region pixel buffer configuration methods
 
 // Set pixel (x,y) to black (0) in the buffer
 static void set_pixel(int x, int y) {
@@ -56,6 +58,9 @@ static void pack_buffer(void) {
     }
 }
 
+#pragma endregion
+
+#pragma region 5x7_mono text
 static void draw_char_5x7(int x, int y, char c) {
     const uint8_t *bitmap = NULL;
 
@@ -83,6 +88,18 @@ static void draw_string_5x7(int x, int y, const char *str) {
     }
 }
 
+// void draw_string_5x7_test() {
+//     draw_string_5x7(10, 10, " !\"#$%&'()*+,-./012");
+//     draw_string_5x7(10, 30, "3456789:;<=>?@ABCDE");
+//     draw_string_5x7(10, 50, "FGHIJKLMNOPQRSTUVWX");
+//     draw_string_5x7(10, 70, "YZ[\\]^_`abcdefghijk");
+//     draw_string_5x7(10, 90, "lmnopqrstuvwxyz{|}~");
+// }
+
+#pragma endregion
+
+#pragma region 8x12_montserrat text
+
 static void draw_char_8x12_montserrat(int x, int y, char c) {
     if (c < 0x20 || c > 0x7E) {
         return; // unsupported character
@@ -109,22 +126,26 @@ static void draw_string_8x12_montserrat(int x, int y, const char *str) {
     }
 }
 
-static void pattern_background() {
-    for (int x = 0; x < DISPLAY_WIDTH; x++) {
-        for (int y = 0; y < DISPLAY_HEIGHT; y++) {
-            set_pixel(x, y);
-        }
-    }
-}
+// void draw_string_8x12_test() {
+//     draw_string_8x12(10, 10, " !\"#$%&'()*+,-./012");
+//     draw_string_8x12(10, 30, "3456789:;<=>?@ABCDE");
+//     draw_string_8x12(10, 50, "FGHIJKLMNOPQRSTUVWX");
+//     draw_string_8x12(10, 70, "YZ[\\]^_`abcdefghijk");
+//     draw_string_8x12(10, 90, "lmnopqrstuvwxyz{|}~");
+// }
 
-void draw_my_image(int x_offset, int y_offset) {
-    int width = 120;
-    int height = 120;
-    int bytes_per_row = 15;  // (100 + 7) / 8
+#pragma endregion
+
+#pragma region image
+
+void draw_my_image(const Image *img, int x_offset, int y_offset) {
+    int width = img->width;
+    int height = img->height;
+    int bytes_per_row = img->bytes_per_row;
 
     for (int y = 0; y < height; y++) {
         for (int byte_index = 0; byte_index < bytes_per_row; byte_index++) {
-            uint8_t byte = my_image_data[y * bytes_per_row + byte_index];
+            uint8_t byte = img->data[y * bytes_per_row + byte_index];
             for (int bit = 0; bit < 8; bit++) {
                 int x = byte_index * 8 + bit;
                 if (x >= width) break;  // Ignore bits outside width
@@ -138,10 +159,191 @@ void draw_my_image(int x_offset, int y_offset) {
     }
 }
 
+#pragma endregion
+
+#pragma region pattern methods
+
+void pattern_checkerboard(void) {
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            if ((x + y) % 2 == 0) set_pixel(x, y);
+        }
+    }
+}
+
+void pattern_big_checkerboard(void) {
+    int block_size = 8;
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            int block_x = x / block_size;
+            int block_y = y / block_size;
+            if ((block_x + block_y) % 2 == 0) set_pixel(x, y);
+        }
+    }
+}
+
+void pattern_bigger_checkerboard(void) {
+    int block_size = 16;
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            int block_x = x / block_size;
+            int block_y = y / block_size;
+            if ((block_x + block_y) % 2 == 0) set_pixel(x, y);
+        }
+    }
+}
+
+void pattern_gigantic_checkerboard(void) {
+    int block_size = 32;
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            int block_x = x / block_size;
+            int block_y = y / block_size;
+            if ((block_x + block_y) % 2 == 0) set_pixel(x, y);
+        }
+    }
+}
+
+void pattern_grid(void) {
+    for (int y = 0; y < DISPLAY_HEIGHT; y += 8) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) set_pixel(x, y);
+    }
+    for (int x = 0; x < DISPLAY_WIDTH; x += 8) {
+        for (int y = 0; y < DISPLAY_HEIGHT; y++) set_pixel(x, y);
+    }
+}
+
+void pattern_concentric_squares(void) {
+    for (int layer = 0; layer < DISPLAY_HEIGHT / 2; layer += 8) {
+        for (int x = layer; x < DISPLAY_WIDTH - layer; x++) {
+            set_pixel(x, layer);
+            set_pixel(x, DISPLAY_HEIGHT - 1 - layer);
+        }
+        for (int y = layer; y < DISPLAY_HEIGHT - layer; y++) {
+            set_pixel(layer, y);
+            set_pixel(DISPLAY_WIDTH - 1 - layer, y);
+        }
+    }
+}
+
+void pattern_polka_dots(void) {
+    const int dot_spacing_x = 16, dot_spacing_y = 16, dot_radius = 2;
+    for (int cy = dot_radius; cy < DISPLAY_HEIGHT; cy += dot_spacing_y) {
+        for (int cx = dot_radius; cx < DISPLAY_WIDTH; cx += dot_spacing_x) {
+            for (int y = -dot_radius; y <= dot_radius; y++) {
+                for (int x = -dot_radius; x <= dot_radius; x++) {
+                    if (x * x + y * y <= dot_radius * dot_radius) {
+                        set_pixel(cx + x, cy + y);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void pattern_radial_stripes(void) {
+    double M_PI = 3.14159265358979323846;
+    int cx = DISPLAY_WIDTH / 2, cy = DISPLAY_HEIGHT / 2;
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            int dx = x - cx, dy = y - cy;
+            float angle = atan2f(dy, dx);
+            if (((int)((angle + M_PI) / (M_PI / 8))) % 2 == 0) {
+                set_pixel(x, y);
+            }
+        }
+    }
+}
+
+void pattern_spiral(void) {
+    int cx = DISPLAY_WIDTH / 2;
+    int cy = DISPLAY_HEIGHT / 2;
+    float k = 10.0f;           // Spiral tightness (higher = tighter spiral)
+    float band_width = 6.0f;   // Width of each spiral arm
+    float r_min = 4.0f;        // Minimum radius to start drawing (avoids center blob)
+
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            int dx = x - cx;
+            int dy = y - cy;
+            float r = sqrtf(dx * dx + dy * dy);
+
+            if (r < r_min) {
+                continue; // Skip drawing near the center to avoid the dark spot
+            }
+
+            float angle = atan2f(dy, dx); // Range: -π to π
+            float spiral_r = k * angle;
+
+            float dist = r - spiral_r;
+
+            if (fmodf(dist + band_width, band_width * 2.0f) < band_width) {
+                set_pixel(x, y);
+            }
+        }
+    }
+}
+
+void pattern_concentric_circles(void) {
+    int cx = DISPLAY_WIDTH / 2, cy = DISPLAY_HEIGHT / 2;
+    for (int y = 0; y < DISPLAY_HEIGHT; y++) {
+        for (int x = 0; x < DISPLAY_WIDTH; x++) {
+            int dx = x - cx, dy = y - cy;
+            int r = (int)sqrtf(dx * dx + dy * dy);
+            if ((r / 5) % 2 == 0) set_pixel(x, y);
+        }
+    }
+}
+
+void pattern_mab_labs(void) {
+    draw_string_5x7(10, 10, "Interns");
+    draw_string_5x7(10, 30, "at Mab-labs");
+    draw_string_5x7(10, 50, "present --->");
+
+    // ONLY LOOKS NICE WITH THE MAB-LABS logo or any 120x120 image 
+    draw_my_image(&mab_labs, (DISPLAY_WIDTH / 2) - 30, (DISPLAY_HEIGHT / 2) - 60);
+}
+
+#pragma endregion
+
+
+// Method that shows every programmed pattern in an infinite loop
+void show_patterns_loop(const struct device *display_dev, struct display_buffer_descriptor *desc) {
+    typedef void (*pattern_func_t)(void);
+    pattern_func_t patterns[] = {
+        pattern_checkerboard,
+        pattern_big_checkerboard,
+        pattern_bigger_checkerboard,
+        pattern_gigantic_checkerboard,
+        pattern_grid,
+        pattern_concentric_squares,
+        pattern_polka_dots,
+        pattern_radial_stripes,
+        pattern_spiral,
+        pattern_concentric_circles,
+        pattern_mab_labs,
+    };
+    const int pattern_count = sizeof(patterns) / sizeof(patterns[0]);
+
+    while (1) {
+        for (int i = 0; i < pattern_count; i++) {
+            memset(raw_buf, 1, sizeof(raw_buf));  // Clear to white
+            patterns[i]();
+            pack_buffer();
+            display_write(display_dev, 0, 0, desc, buf);
+            if(display_write(display_dev, 0, 0, &desc, buf) != 0) {
+                LOG_ERR("display_write failed (%d)");
+            }
+            k_msleep(REFRESH_RATE);
+        }
+    }
+}
 
 
 int main(void)
 {
+
+#pragma region setup
     const struct device *display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
     const struct device *reset_dev   = device_get_binding("GPIO_1");
     const struct device *spi_dev     = DEVICE_DT_GET(DT_NODELABEL(spi0));
@@ -170,6 +372,8 @@ int main(void)
     LOG_INF("DEVICE IS READY!!!");
     LOG_INF("Display device name: %s", display_dev->name);
 
+#pragma endregion
+
     display_blanking_off(display_dev);
     memset(raw_buf, 1, sizeof(raw_buf));  // White pixels
 
@@ -181,21 +385,16 @@ int main(void)
         .buf_size = DISPLAY_BUF_SIZE,
     };
 
-    // draw_string_5x7(10, 10, " !\"#$%&'()*+,-./012");
-    // draw_string_5x7(10, 30, "3456789:;<=>?@ABCDE");
-    // draw_string_5x7(10, 50, "FGHIJKLMNOPQRSTUVWX");
-    // draw_string_5x7(10, 70, "YZ[\\]^_`abcdefghijk");
-    // draw_string_5x7(10, 90, "lmnopqrstuvwxyz{|}~");
+    show_patterns_loop(display_dev, &desc);    
 
-    // draw_string_5x7(10, 10, "Hello world!");
-    // pattern_background();
-    draw_string_5x7(10, 10, "Interns");
-    draw_string_5x7(10, 30, "at Mab-labs");
-    draw_string_5x7(10, 50, "present ...");
+    // draw_my_image(&my_image, 0, 0);
+    // int x_displacement = 70;
+    // draw_string_5x7(x_displacement, 30, "\"Without math,");
+    // draw_string_5x7(x_displacement, 38, " we're dead in");
+    // draw_string_5x7(x_displacement, 46, " the water\"");
+    // draw_string_5x7(x_displacement + 10, 60, "- Ken Chung");
 
-    draw_my_image(100, (DISPLAY_HEIGHT / 2) - 60);
-
-    pack_buffer();
+    // pack_buffer();
     display_write(display_dev, 0, 0, &desc, buf);
 
     k_msleep(1000);
